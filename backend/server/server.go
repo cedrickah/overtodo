@@ -1,16 +1,12 @@
 package server
 
 import (
-	"log"
-
-	"overtodo/db"
 	"overtodo/routers"
+
+	"github.com/gin-gonic/gin"
 )
 
-func Start() {
-	_, err := db.Connect()
-	if err != nil {
-		log.Fatalf("Failed to create the driver: %v", err)
-	}
-	routers.RegisterRoutes()
+func Start() *gin.Engine {
+	router := routers.RegisterRoutes()
+	return router
 }

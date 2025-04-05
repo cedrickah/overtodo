@@ -1,5 +1,5 @@
 # Use the official Golang image to build the Go application
-FROM golang:1.20 AS builder
+FROM golang:1.23 AS builder
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -29,7 +29,7 @@ COPY --from=builder /app/app .
 EXPOSE 8080
 
 # Copy the docker-entrypoint.sh
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 # Give permissions to execute docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

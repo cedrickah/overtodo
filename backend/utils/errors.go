@@ -1,11 +1,9 @@
 package utils
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 )
 
-func HandleError(c *gin.Context, err error) {
-    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+func HandleError(c *gin.Context, s int, err error) {
+    c.JSON(s, gin.H{"error": err.Error()})
 }

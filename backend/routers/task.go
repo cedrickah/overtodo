@@ -7,11 +7,12 @@ import (
 )
 
 
-func RegisterRoutes() {
+func RegisterRoutes() *gin.Engine {
 	router := gin.Default()
 
     router.GET("/tasks", controllers.GetTasks)
 	router.POST("/tasks", controllers.AddTask)
 	router.PUT("/tasks/:id", controllers.UpdateTaskStatus)
 	router.DELETE("/tasks/:id", controllers.DeleteTask)
+	return router
 }

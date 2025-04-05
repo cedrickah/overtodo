@@ -2,6 +2,9 @@ package controllers
 
 import (
 	"net/http"
+	"overtodo/db"
+	"overtodo/utils"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
@@ -16,7 +19,7 @@ type Task struct {
 }
 
 func GetTasks(c *gin.Context) {
-	session := driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
+	session := db.Driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeRead})
 	defer session.Close()
 
 	userID := c.DefaultQuery("user_id", "default_user")
@@ -26,19 +29,19 @@ func GetTasks(c *gin.Context) {
 		map[string]interface{}{"user_id": userID},
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.HandleError(c, http.StatusInternalServerError, err)
 		return
 	}
 
 	var tasks []Task
 	for result.Next() {
 		record := result.Record()
-		taskNode := record.GetByIndex(0).(neo4j.Node)
+		taskNode := record.Values[0].(neo4j.Node)
 
 		task := Task{
-			ID:        taskNode.Id().String(),
-			Title:     taskNode.Props()["title"].(string),
-			Completed: taskNode.Props()["completed"].(bool),
+			ID:        strconv.FormatInt(taskNode.Id, 10),
+			Title:     taskNode.Props["title"].(string),
+			Completed: taskNode.Props["completed"].(bool),
 		}
 		tasks = append(tasks, task)
 	}
@@ -53,7 +56,7 @@ func AddTask(c *gin.Context) {
 		return
 	}
 
-	session := driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := db.Driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	userID := c.DefaultQuery("user_id", "default_user")
@@ -68,7 +71,7 @@ func AddTask(c *gin.Context) {
 		},
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.HandleError(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -82,11 +85,11 @@ func UpdateTaskStatus(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&status); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.HandleError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	session := driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := db.Driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	_, err := session.Run(
@@ -97,7 +100,7 @@ func UpdateTaskStatus(c *gin.Context) {
 		},
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.HandleError(c, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -107,7 +110,7 @@ func UpdateTaskStatus(c *gin.Context) {
 func DeleteTask(c *gin.Context) {
 	taskID := c.Param("id")
 
-	session := driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
+	session := db.Driver.NewSession(neo4j.SessionConfig{AccessMode: neo4j.AccessModeWrite})
 	defer session.Close()
 
 	_, err := session.Run(
@@ -115,7 +118,7 @@ func DeleteTask(c *gin.Context) {
 		map[string]interface{}{"task_id": taskID},
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.HandleError(c, http.StatusInternalServerError, err)
 		return
 	}
 
